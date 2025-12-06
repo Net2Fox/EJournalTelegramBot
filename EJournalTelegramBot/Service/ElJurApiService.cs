@@ -1,11 +1,12 @@
 ﻿using System.Text.Json;
+using EJournalTelegramBot.Configuration;
 using EJournalTelegramBot.Model.ElJurApi;
 
 namespace EJournalTelegramBot.Service;
 
 public class ElJurApiService
 {
-    private readonly ElJurApiOptions _options;
+    private readonly ElJurApiConfiguration _options;
     
     private readonly HttpClient _httpClient;
     
@@ -14,7 +15,7 @@ public class ElJurApiService
     private string AuthToken => _options.AuthToken;
     private string Vendor => _options.Vendor;
 
-    public ElJurApiService(ElJurApiOptions options, HttpClient? httpClient = null)
+    public ElJurApiService(ElJurApiConfiguration options, HttpClient? httpClient = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _httpClient = httpClient ?? new HttpClient();

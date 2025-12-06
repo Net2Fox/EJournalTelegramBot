@@ -56,12 +56,10 @@ IHost host = Host.CreateDefaultBuilder(args)
                 ElJurApiConfiguration? elJurApiConfiguration =
                     serviceProvider.GetService<IOptions<ElJurApiConfiguration>>()?.Value;
                 ArgumentNullException.ThrowIfNull(elJurApiConfiguration);
-                ElJurApiOptions options = new(elJurApiConfiguration.BaseUrl, elJurApiConfiguration.DevKey,
-                    elJurApiConfiguration.AuthToken, elJurApiConfiguration.Vendor);
                 
                 httpClient.Timeout = TimeSpan.FromSeconds(30);
                 
-                return new ElJurApiService(options, httpClient);
+                return new ElJurApiService(elJurApiConfiguration, httpClient);
             });
 
         services.AddScoped<UpdateHandler>();
