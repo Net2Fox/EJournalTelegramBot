@@ -6,7 +6,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace EJournalTelegramBot.Service;
 
-public class UpdateHandler(CacheService cacheService, ScheduleFormatter formatter, ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IUpdateHandler
+public class UpdateHandler(CacheService cacheService, ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IUpdateHandler
 {
     public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source,
         CancellationToken cancellationToken)
