@@ -47,7 +47,7 @@ public class UpdateHandler(CacheService cacheService, ScheduleFormatter formatte
     {
         const string usage = """
                              *Меню бота*
-                             /schedule - получить расписание
+                             /schedule — получить актуальное расписание
                              """;
         return await bot.SendMessage(message.Chat, usage, parseMode: ParseMode.Markdown);
     }
