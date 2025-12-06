@@ -1,10 +1,11 @@
-﻿using EJournalTelegramBot.Model;
+﻿using System.Collections.Concurrent;
+using EJournalTelegramBot.Model;
 
 namespace EJournalTelegramBot.Service;
 
 public class CacheService(ScheduleFormatter formatter)
 {
-    private readonly Dictionary<string, Schedule> _cache = new();
+    private readonly ConcurrentDictionary<string, Schedule> _cache = new();
 
     public Schedule? GetSchedule(string groupName)
     {
