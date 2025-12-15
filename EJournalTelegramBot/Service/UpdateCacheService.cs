@@ -3,10 +3,11 @@ using EJournalTelegramBot.Model.ElJurApi;
 
 namespace EJournalTelegramBot.Service;
 
-public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheService)
+public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheService, ILogger<UpdateCacheService> logger)
 {
-    public async Task UpdateCache()
+    public async Task<bool> UpdateScheduleCache()
     {
+        logger.LogInformation("Starting UpdateScheduleCache");
         var tomorrow = DateTime.Now;
         switch (tomorrow.DayOfWeek)
         {
@@ -23,16 +24,41 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
                 tomorrow = tomorrow.AddDays(1);
                 break;
         }
-        
-        GetScheduleResult? scheduleResult = await elJurApi.GetSchedule("3ИСИП-323", tomorrow.ToString("yyyyMMdd"), "yes");
-        if (scheduleResult != null)
+
+        bool isSuccessful = true;
+        IReadOnlyList<string> groups = cacheService.GetGroups();
+        foreach (var group in groups)
         {
-            var schedule = new Schedule()
+            GetScheduleResult? scheduleResult = await elJurApi.GetSchedule(group, tomorrow.ToString("yyyyMMdd"), "yes");
+            if (scheduleResult != null)
             {
-                Day = tomorrow,
-                ScheduleItems = scheduleResult.ScheduleItems
-            };
-            cacheService.UpdateSchedule("3ИСИП-323", schedule);
+                var schedule = new Schedule()
+                {
+                    Day = tomorrow,
+                    ScheduleItems = scheduleResult.ScheduleItems
+                };
+                cacheService.UpdateSchedule(group, schedule);
+            }
+            else
+            {
+                isSuccessful = false;
+            }
+            Thread.Sleep(100);
         }
+        logger.LogInformation("UpdateScheduleCache completed");
+        return isSuccessful;
+    }
+    
+    public async Task<bool> UpdateGroupsCache()
+    {
+        logger.LogInformation("Starting UpdateGroupsCache");
+        GetGroupsResult? groupsResult = await elJurApi.GetGroups();
+        if (groupsResult != null)
+        {
+            cacheService.UpdateGroups(groupsResult.Groups);
+            logger.LogInformation("UpdateGroupsCache completed");
+            return true;
+        }
+        return false;
     }
 }

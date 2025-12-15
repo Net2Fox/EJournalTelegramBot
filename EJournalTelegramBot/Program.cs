@@ -15,7 +15,8 @@ IHost host = Host.CreateDefaultBuilder(args)
         
         services.AddTransient<ScheduleMessageJob>();
 
-        services.Configure<ScheduleConfiguration>(context.Configuration.GetSection("ScheduleConfiguration"));
+        services.Configure<BroadcastConfiguration>(context.Configuration.GetSection("BroadcastConfiguration"));
+        services.Configure<AdminConfiguration>(context.Configuration.GetSection("AdminConfiguration"));
         services.Configure<QuartzOptions>(context.Configuration.GetSection("Quartz"));
         services.AddQuartz(q =>
         {

@@ -11,7 +11,7 @@ public class ScheduleFormatter
         if (schedule != null)
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Расписание для *{groupName}* на  *{schedule.Day:dd.MM.yyyy}*:");
+            sb.AppendLine($"Расписание для *{groupName}* на *{schedule.Day:dd.MM.yyyy}*:");
             sb.AppendLine();
             if (schedule.ScheduleItems != null &&  schedule.ScheduleItems.Count != 0)
             {
@@ -20,7 +20,7 @@ public class ScheduleFormatter
                     ScheduleItem sc =  schedule.ScheduleItems[i];
                     DateTime start = DateTime.Parse(sc.StartTime);
                     DateTime end = DateTime.Parse(sc.EndTime);
-                    if (i != 0 && int.Parse(sc.Num)!= 1)
+                    if (i != 0 && int.Parse(sc.Num) != 1)
                     {
                         int rest = (TimeSpan.Parse(sc.StartTime) - 
                                     TimeSpan.Parse(schedule.ScheduleItems[i - 1].EndTime)).Minutes;

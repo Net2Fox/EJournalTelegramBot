@@ -1,6 +1,6 @@
 ﻿namespace EJournalTelegramBot.Configuration;
 
-public class ScheduleConfiguration
+public class BroadcastConfiguration
 {
     public List<long>? ChatIds { get; init; } = null!;
 }
