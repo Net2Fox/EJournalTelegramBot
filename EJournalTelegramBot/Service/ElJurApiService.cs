@@ -89,7 +89,7 @@ public class ElJurApiService
         return null;
     }
     
-    public async Task<List<string>> GetTeachers()
+    public async Task<List<string>?> GetTeachers()
     {
         var url = $"{BaseUrl}/getmessagereceivers?devkey={DevKey}&out_format=json&vendor={Vendor}&auth_token={AuthToken}";
         HttpResponseMessage httpResponse = await _httpClient.GetAsync(url);
@@ -146,6 +146,12 @@ public class ElJurApiService
                 }
             }
         }
-        return new List<string>(teachers.OrderBy(t => t));
+
+        return teachers.Count switch
+        {
+            0 => null,
+            _ => teachers.OrderBy(t => t).ToList()
+
+        };
     }
 }

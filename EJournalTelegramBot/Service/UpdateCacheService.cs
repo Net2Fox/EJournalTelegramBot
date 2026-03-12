@@ -65,7 +65,7 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
     public async Task<bool> UpdateTeacherCache()
     {
         logger.LogInformation("Starting UpdateTeacherCache");
-        List<string> teachersResult = await elJurApi.GetTeachers();
+        List<string>? teachersResult = await elJurApi.GetTeachers();
         if (teachersResult != null)
         {
             cacheService.UpdateTeachers(teachersResult);
