@@ -61,4 +61,17 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
         }
         return false;
     }
+    
+    public async Task<bool> UpdateTeacherCache()
+    {
+        logger.LogInformation("Starting UpdateTeacherCache");
+        List<string> teachersResult = await elJurApi.GetTeachers();
+        if (teachersResult != null)
+        {
+            cacheService.UpdateTeachers(teachersResult);
+            logger.LogInformation("UpdateTeacherCache completed");
+            return true;
+        }
+        return false;
+    }
 }

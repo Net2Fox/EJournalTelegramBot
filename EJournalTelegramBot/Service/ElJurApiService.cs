@@ -88,4 +88,64 @@ public class ElJurApiService
         }
         return null;
     }
+    
+    public async Task<List<string>> GetTeachers()
+    {
+        var url = $"{BaseUrl}/getmessagereceivers?devkey={DevKey}&out_format=json&vendor={Vendor}&auth_token={AuthToken}";
+        HttpResponseMessage httpResponse = await _httpClient.GetAsync(url);
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            throw new Exception("Error getting schedule");
+        }
+        var jsonContent =  await httpResponse.Content.ReadAsStringAsync();
+        
+        var teachers = new HashSet<string>();
+        using JsonDocument document = JsonDocument.Parse(jsonContent);
+        JsonElement root = document.RootElement;
+        if (root.TryGetProperty("response", out JsonElement response) &&
+            response.TryGetProperty("result", out JsonElement result) &&
+            result.TryGetProperty("groups", out JsonElement groups))
+        {
+            foreach (JsonElement group in groups.EnumerateArray())
+            {
+                if (group.TryGetProperty("key", out JsonElement keyElement) &&
+                    keyElement.GetString() == "categories" &&
+                    group.TryGetProperty("subgroups", out JsonElement subgroups))
+                {
+                    foreach (JsonElement subgroup in subgroups.EnumerateArray())
+                    {
+                        if (subgroup.TryGetProperty("name", out JsonElement nameElement) &&
+                            nameElement.GetString() == "Преподаватель" &&
+                            subgroup.TryGetProperty("users", out JsonElement users))
+                        {
+                            foreach (JsonElement userElement in users.EnumerateArray())
+                            {
+                                if (userElement.TryGetProperty("lastname", out JsonElement lastnameEl)
+                                    && userElement.TryGetProperty("firstname", out JsonElement firstnameEl))
+                                {
+                                    string FIO = $"{lastnameEl.GetString().Trim()} {firstnameEl.GetString().Trim()} {(userElement.TryGetProperty("middlename", out JsonElement middlenameEl) ? middlenameEl.GetString().Trim() : null)}";
+                                    teachers.Add(FIO);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (keyElement.GetString() == "teachers" &&
+                    group.TryGetProperty("users", out JsonElement usersElement))
+                {
+                    foreach (JsonElement user in usersElement.EnumerateArray())
+                    {
+                        if (user.TryGetProperty("lastname", out JsonElement lastnameEl)
+                            && user.TryGetProperty("firstname", out JsonElement firstnameEl))
+                        {
+                            string FIO = $"{lastnameEl.GetString().Trim()} {firstnameEl.GetString().Trim()} {(user.TryGetProperty("middlename", out JsonElement middlenameEl) ? middlenameEl.GetString().Trim() : null)}";
+                            teachers.Add(FIO);
+                        }
+                    }
+                }
+            }
+        }
+        return new List<string>(teachers.OrderBy(t => t));
+    }
 }

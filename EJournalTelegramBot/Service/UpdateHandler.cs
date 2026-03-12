@@ -41,6 +41,8 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
         Message sentMessage = await (messageText.Split(' ')[0] switch
         {
             "/schedule" => ChooseCourse(message),
+            "/teacher" => ChooseTeacher(message),
+            "/room" => ChooseCourse(message),
             "/update_groups" => UpdateGroups(message),
             "/update_schedule" => UpdateSchedule(message),
             _ => Usage(message)
@@ -87,6 +89,47 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
                 [("3 курс", "3"), ("4 курс", "4")]
                 
             });
+    }
+    
+    async Task<Message> ChooseTeacher(Message message, int offset = 0, bool update = false)
+    {
+        InlineKeyboardMarkup inline = new InlineKeyboardMarkup();
+        
+        int i = 0;
+        int j = 0;
+        
+        foreach (var teacher in cacheService.GetTeachersWithOffset(offset))
+        {
+            if (i != 2)
+            {
+                inline.AddButton(new InlineKeyboardButton(teacher, teacher.Split(" ")[0]));
+                i = i + 1;
+                j = j + 1;
+            }
+            else
+            {
+                inline.AddNewRow();
+                i = 0;
+                inline.AddButton(new InlineKeyboardButton(teacher, teacher.Split(" ")[0]));
+                i = i + 1;
+                j = j + 1;
+            }
+        }
+        inline.AddNewRow();
+        inline.AddButton("Назад", "BackTeacher");
+        inline.AddButton("Дальше", "NextTeacher");
+        inline.AddNewRow();
+        inline.AddButton("Меню", "Back");
+
+        if (update)
+        {
+            return await bot.EditMessageReplyMarkup(message.Chat, message.MessageId, inline);
+        }
+        else
+        {
+            return await bot.SendMessage(message.Chat.Id, "Выберите преподавателя",
+                replyMarkup: inline);
+        }
     }
 
     async Task<Message> UpdateSchedule(Message message)
@@ -154,6 +197,12 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
                     [("3 курс", "3"), ("4 курс", "4")]
                 };
                 break;
+            case "BackTeacher":
+                await ChooseTeacher(callbackQuery.Message, -12, true);
+                return;
+            case "NextTeacher":
+                await ChooseTeacher(callbackQuery.Message, 12, true);
+                return;
             default:
                 await SendScheduleByGroup(callbackQuery.Message, callbackQuery.Data);
                 return;
