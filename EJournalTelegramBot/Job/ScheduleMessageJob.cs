@@ -7,7 +7,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace EJournalTelegramBot.Job;
 
-public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService updateCacheService, IOptions<BroadcastConfiguration> config, ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IJob
+public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService updateCacheService, IOptionsMonitor<BroadcastConfiguration> broadcast, ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IJob
 {
     public static readonly JobKey Key = new("ScheduleMessageJob");
     
@@ -25,7 +25,7 @@ public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService up
 
     private async Task BroadcastSchedule()
     {
-        List<long>? chatIds = config.Value.ChatIds;
+        List<long>? chatIds = broadcast.CurrentValue.ChatIds;
         if (chatIds != null && chatIds.Count != 0)
         {
             foreach (long chatId in chatIds)
