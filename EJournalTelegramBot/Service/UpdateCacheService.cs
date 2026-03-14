@@ -47,9 +47,9 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
                 
             foreach (var scheduleItem in schedule.ScheduleItems)
             {
-                scheduleItem.SubGroup = group;
-                cacheService.AddTeacherSchedule(scheduleItem.Teacher.Trim().Split(" ")[0], scheduleItem, schedule.Day);
-                cacheService.AddRoomSchedule(scheduleItem.Room.Trim(), scheduleItem, schedule.Day);
+                var item = scheduleItem with { SubGroup = group };
+                cacheService.AddTeacherSchedule(item.Teacher.Trim().Split(" ")[0], item, schedule.Day);
+                cacheService.AddRoomSchedule(item.Room.Trim(), item, schedule.Day);
             }
             
             await Task.Delay(100);
