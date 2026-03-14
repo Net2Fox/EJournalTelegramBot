@@ -25,12 +25,20 @@ public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService up
 
     private async Task BroadcastSchedule()
     {
-        List<long>? chatIds = broadcast.CurrentValue.ChatIds;
-        if (chatIds != null && chatIds.Count != 0)
+        var broadcastEntities = broadcast.CurrentValue.BroadcastEntities;
+        if (broadcastEntities != null)
         {
-            foreach (long chatId in chatIds)
+            return;
+        }
+        
+        foreach (var broadcastEntity in broadcastEntities)
+        {
+            if (broadcastEntity.Subscriptions != null)
             {
-                await bot.SendMessage(chatId, cacheService.GetFormattedSchedule("3ИСИП-323"), ParseMode.Markdown);
+                foreach (string subscription in broadcastEntity.Subscriptions)
+                {
+                    await bot.SendMessage(broadcastEntity.ChatId, cacheService.GetFormattedSchedule(subscription), ParseMode.Markdown);
+                }
             }
         }
     }
