@@ -16,9 +16,7 @@ public class StartupService(UpdateCacheService updateCacheService, ITelegramBotC
     {
         List<BotCommand> commands = 
         [
-            new("group", "Получить расписание по группе"),
-            new("teacher", "Получить расписание по преподавателю"),
-            new("room", "Получить расписание по аудитории")
+            new("menu", "Главное меню"),
         ];
 
         await bot.SetMyCommands(commands, cancellationToken: cancellationToken);
