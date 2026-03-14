@@ -84,7 +84,7 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
                 switch (prefix)
                 {
                     case CallbackData.GroupPrefix:
-                        inline = InlineKeyboard.BuildPagedGrid(cacheService.GetGroups().Where(g => g[0] == Char.Parse(value)).ToList(), 0,CallbackData.GroupPrefix);
+                        inline = InlineKeyboard.BuildGrid(cacheService.GetGroups().Where(g => g[0] == Char.Parse(value)).ToList(),CallbackData.GroupPrefix);
                         text = "Выберите группу";
                         break;
                     case CallbackData.TeacherPrefix:
