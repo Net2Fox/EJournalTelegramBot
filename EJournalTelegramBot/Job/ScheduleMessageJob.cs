@@ -26,7 +26,7 @@ public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService up
     private async Task BroadcastSchedule()
     {
         var broadcastEntities = broadcast.CurrentValue.BroadcastEntities;
-        if (broadcastEntities != null)
+        if (broadcastEntities == null)
         {
             return;
         }
