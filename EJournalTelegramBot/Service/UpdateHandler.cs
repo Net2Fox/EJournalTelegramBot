@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using EJournalTelegramBot.Configuration;
+using EJournalTelegramBot.Util;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -36,102 +37,117 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
     private async Task OnMessage(Message message)
     {
         logger.LogInformation("Received message type: {MessageType}", message.Type);
-        if (message.Text is not { } messageText) return;
         
-        Message sentMessage = await (messageText.Split(' ')[0] switch
-        {
-            "/schedule" => ChooseCourse(message),
-            "/teacher" => ChooseTeacher(message),
-            "/room" => ChooseCourse(message),
-            "/update_groups" => UpdateGroups(message),
-            "/update_schedule" => UpdateSchedule(message),
-            _ => Usage(message)
-        });
-
-        logger.LogInformation("The message was sent with id: {SentMessageId}", sentMessage.Id);
+        await bot.SendMessage(message.Chat.Id, "Главное меню",
+            replyMarkup: MainMenu());
     }
 
-    async Task<Message> Usage(Message message)
+    private InlineKeyboardMarkup MainMenu()
     {
-        List<string> lines = new()
-        {
-            "*Меню бота*",
-            "/schedule — получить актуальное расписание"
-        };
-        
-        if (adminConfig.Value.AdminIds != null && adminConfig.Value.AdminIds.Contains(message.Chat.Id))
-        {
-            lines.Add("");
-            lines.Add("");
-            lines.Add("У вас есть доступ к админ командам:");
-            lines.Add("/update\\_groups — обновить группы");
-            lines.Add("/update\\_schedule — обновить расписание");
-        }
-        return await bot.SendMessage(message.Chat, string.Join("\n", lines), parseMode: ParseMode.Markdown);
+        InlineKeyboardMarkup inline = new InlineKeyboardMarkup();
+        inline.AddButton("Расписание по группам", "Group");
+        inline.AddNewRow();
+        inline.AddButton("Расписание по преподавателям", "Teacher");
+        inline.AddNewRow();
+        inline.AddButton("Расписание по кабинетам", "Room");
+        return inline;
     }
 
-    async Task<Message> SendSchedule(Message message)
+    private InlineKeyboardMarkup ChooseCourse()
     {
-        return await bot.SendMessage(message.Chat, cacheService.GetFormattedSchedule("3ИСИП-323"), ParseMode.Markdown);
-    }
-    
-    async Task<Message> SendScheduleByGroup(Message message,  string group)
-    {
-        return await bot.SendMessage(message.Chat, cacheService.GetFormattedSchedule(group), ParseMode.Markdown);
+        return new InlineKeyboardMarkup()
+            .AddButton("1 курс", "1")
+            .AddButton("2 курс", "2")
+            .AddNewRow()
+            .AddButton("3 курс", "3")
+            .AddButton("4 курс", "4");
     }
 
-    async Task<Message> ChooseCourse(Message message)
-    {
-        return await bot.SendMessage(message.Chat.Id, "Выберите курс",
-            replyMarkup: new InlineKeyboardButton[][]
-            {
-                [("1 курс", "1"), ("2 курс", "2")],
-                [("3 курс", "3"), ("4 курс", "4")]
-                
-            });
-    }
-    
-    async Task<Message> ChooseTeacher(Message message, int offset = 0, bool update = false)
+    private InlineKeyboardMarkup BuildGridInlineKeyboard(IReadOnlyList<string> items, string suffix)
     {
         InlineKeyboardMarkup inline = new InlineKeyboardMarkup();
         
         int i = 0;
-        int j = 0;
-        
-        foreach (var teacher in cacheService.GetTeachersWithOffset(offset))
+        foreach (var item in items)
         {
             if (i != 2)
             {
-                inline.AddButton(new InlineKeyboardButton(teacher, teacher.Split(" ")[0]));
-                i = i + 1;
-                j = j + 1;
+                inline.AddButton(new InlineKeyboardButton(item, $"{item.Split(" ")[0]} {suffix}"));
+                i++;
             }
             else
             {
                 inline.AddNewRow();
                 i = 0;
-                inline.AddButton(new InlineKeyboardButton(teacher, teacher.Split(" ")[0]));
-                i = i + 1;
-                j = j + 1;
+                inline.AddButton(new InlineKeyboardButton(item, $"{item.Split(" ")[0]} {suffix}"));
+                i++;
             }
         }
         inline.AddNewRow();
-        inline.AddButton("Назад", "BackTeacher");
-        inline.AddButton("Дальше", "NextTeacher");
-        inline.AddNewRow();
-        inline.AddButton("Меню", "Back");
-
-        if (update)
-        {
-            return await bot.EditMessageReplyMarkup(message.Chat, message.MessageId, inline);
-        }
-        else
-        {
-            return await bot.SendMessage(message.Chat.Id, "Выберите преподавателя",
-                replyMarkup: inline);
-        }
+        inline.AddButton("Назад", $"Back{suffix}");
+        inline.AddButton("Дальше", $"Next{suffix}");
+        return inline;
     }
 
+    private async Task OnCallbackQuery(CallbackQuery callbackQuery)
+    {
+        InlineKeyboardMarkup inline = new InlineKeyboardMarkup();
+        string text = "";
+        
+        switch (callbackQuery.Data)
+        {
+            case "Back":
+                inline = MainMenu();
+                text = "Главное меню";
+                break;
+            case "1" or "2" or "3" or "4":
+                inline = BuildGridInlineKeyboard(cacheService.GetGroups().Where(g => g[0] == Char.Parse(callbackQuery.Data)).ToList(), CallbackData.GroupSuffix);
+                text = "Выберите группу";
+                break;
+            case $"Back{CallbackData.TeacherSuffix}":
+                inline = BuildGridInlineKeyboard(cacheService.GetTeachers(-12), CallbackData.TeacherSuffix);
+                text = "Выберите преподавателя";
+                break;
+            case $"Next{CallbackData.TeacherSuffix}":
+                inline = BuildGridInlineKeyboard(cacheService.GetTeachers(12), CallbackData.TeacherSuffix);
+                text = "Выберите преподавателя";
+                break;
+            case $"Back{CallbackData.RoomSuffix}":
+                inline = BuildGridInlineKeyboard(cacheService.GetRooms(-12), CallbackData.RoomSuffix);
+                text = "Выберите аудиторию";
+                break;
+            case $"Next{CallbackData.RoomSuffix}":
+                inline = BuildGridInlineKeyboard(cacheService.GetRooms(12), CallbackData.RoomSuffix);
+                text = "Выберите аудиторию";
+                break;
+            case "Teacher":
+                inline = BuildGridInlineKeyboard(cacheService.GetTeachers(), CallbackData.TeacherSuffix);
+                text = "Выберите преподавателя";
+                break;
+            case "Group":
+                inline = ChooseCourse();
+                text = "Выберите курс";
+                break;
+            case "Room":
+                inline = BuildGridInlineKeyboard(cacheService.GetRooms(), CallbackData.RoomSuffix);
+                text = "Выберите аудиторию";
+                break;
+            case string t when t.Contains("TCH"):
+                text = cacheService.GetTeacherFormattedSchedule(callbackQuery.Data.Split(" ")[0]);
+                break;
+            case string t when t.Contains("RM"):
+                text = cacheService.GetRoomFormattedSchedule(callbackQuery.Data.Split(" ")[0]);
+                break;
+            case string t when t.Contains("GRP"):
+                text = cacheService.GetFormattedSchedule(callbackQuery.Data.Split(" ")[0]);
+                break;
+        }
+        inline.AddNewRow();
+        inline.AddButton("Меню", "Back");
+        await bot.EditMessageText(callbackQuery.Message.Chat, callbackQuery.Message.MessageId, text,  ParseMode.Markdown);
+        await bot.EditMessageReplyMarkup(callbackQuery.Message.Chat, callbackQuery.Message.MessageId, inline);
+    }
+    
     async Task<Message> UpdateSchedule(Message message)
     {
         if (adminConfig.Value.AdminIds != null && adminConfig.Value.AdminIds.Contains(message.Chat.Id))
@@ -160,55 +176,6 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
         }
 
         return await bot.SendMessage(message.Chat, "Нет доступа!", ParseMode.Markdown);
-    }
-
-    private async Task OnCallbackQuery(CallbackQuery callbackQuery)
-    {
-        InlineKeyboardMarkup inline = new InlineKeyboardMarkup();
-        int i = 0;
-        int j = 0;
-        switch (callbackQuery.Data)
-        {
-            case "1" or "2" or "3" or "4":
-                foreach (var group in cacheService.GetGroups().Where(g => g[0] == Char.Parse(callbackQuery.Data)))
-                {
-                    if (i != 2)
-                    {
-                        inline.AddButton(new InlineKeyboardButton(group, group));
-                        i = i + 1;
-                        j = j + 1;
-                    }
-                    else
-                    {
-                        inline.AddNewRow();
-                        i = 0;
-                        inline.AddButton(new InlineKeyboardButton(group, group));
-                        i = i + 1;
-                        j = j + 1;
-                    }
-                }
-                inline.AddNewRow();
-                inline.AddButton("Назад", "Back");
-                break;
-            case "Back":
-                inline = new InlineKeyboardButton[][]
-                {
-                    [("1 курс", "1"), ("2 курс", "2")],
-                    [("3 курс", "3"), ("4 курс", "4")]
-                };
-                break;
-            case "BackTeacher":
-                await ChooseTeacher(callbackQuery.Message, -12, true);
-                return;
-            case "NextTeacher":
-                await ChooseTeacher(callbackQuery.Message, 12, true);
-                return;
-            default:
-                await SendScheduleByGroup(callbackQuery.Message, callbackQuery.Data);
-                return;
-        }
-        
-        await bot.EditMessageReplyMarkup(callbackQuery.Message.Chat, callbackQuery.Message.MessageId, inline);
     }
 
     private Task UnknownUpdateHandlerAsync(Update update)
