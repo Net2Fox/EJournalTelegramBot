@@ -20,7 +20,6 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.Configure<QuartzOptions>(context.Configuration.GetSection("Quartz"));
         services.AddQuartz(q =>
         {
-            
             q.SchedulerId = "QuartzScheduler";
 
             q.UseSimpleTypeLoader();
@@ -62,7 +61,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                 
                 return new ElJurApiService(elJurApiConfiguration, httpClient);
             });
-
+        
         services.AddScoped<UpdateHandler>();
         services.AddScoped<ReceiverService>();
         services.AddHostedService<PollingService>();
