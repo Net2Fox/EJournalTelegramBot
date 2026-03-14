@@ -20,31 +20,38 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
             case DayOfWeek.Sunday:
                 tomorrow = tomorrow.AddDays(1);
                 break;
-            default:
-                tomorrow = tomorrow.AddDays(1);
-                break;
         }
 
         bool isSuccessful = true;
         IReadOnlyList<string> groups = cacheService.GetGroups();
+        
         foreach (var group in groups)
         {
             GetScheduleResult? scheduleResult = await elJurApi.GetSchedule(group, tomorrow.ToString("yyyyMMdd"), "yes");
-            if (scheduleResult != null)
-            {
-                var schedule = new Schedule()
-                {
-                    Day = tomorrow,
-                    ScheduleItems = scheduleResult.ScheduleItems
-                };
-                cacheService.UpdateSchedule(group, schedule);
-            }
-            else
+
+            if (scheduleResult == null)
             {
                 isSuccessful = false;
+                continue;
             }
-            Thread.Sleep(100);
+            
+            var schedule = new Schedule()
+            {
+                Day = tomorrow,
+                ScheduleItems = scheduleResult.ScheduleItems
+            };
+            cacheService.UpdateSchedule(group, schedule);
+                
+            foreach (var scheduleItem in schedule.ScheduleItems)
+            {
+                scheduleItem.SubGroup = group;
+                cacheService.AddTeacherSchedule(scheduleItem.Teacher.Trim().Split(" ")[0], scheduleItem, schedule.Day);
+                cacheService.AddRoomSchedule(scheduleItem.Room.Trim(), scheduleItem, schedule.Day);
+            }
+            
+            await Task.Delay(100);
         }
+        
         logger.LogInformation("UpdateScheduleCache completed");
         return isSuccessful;
     }
@@ -57,19 +64,6 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
         {
             cacheService.UpdateGroups(groupsResult.Groups);
             logger.LogInformation("UpdateGroupsCache completed");
-            return true;
-        }
-        return false;
-    }
-    
-    public async Task<bool> UpdateTeacherCache()
-    {
-        logger.LogInformation("Starting UpdateTeacherCache");
-        List<string>? teachersResult = await elJurApi.GetTeachers();
-        if (teachersResult != null)
-        {
-            cacheService.UpdateTeachers(teachersResult);
-            logger.LogInformation("UpdateTeacherCache completed");
             return true;
         }
         return false;
