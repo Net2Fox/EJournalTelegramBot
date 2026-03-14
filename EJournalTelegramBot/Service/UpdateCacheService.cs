@@ -27,7 +27,7 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
         
         foreach (var group in groups)
         {
-            GetScheduleResult? scheduleResult = await elJurApi.GetSchedule(group, tomorrow.ToString("yyyyMMdd"), "yes");
+            ScheduleResult? scheduleResult = await elJurApi.GetSchedule(group, tomorrow.ToString("yyyyMMdd"), "yes");
 
             if (scheduleResult == null)
             {
@@ -59,7 +59,7 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
     public async Task<bool> UpdateGroupsCache()
     {
         logger.LogInformation("Starting UpdateGroupsCache");
-        GetGroupsResult? groupsResult = await elJurApi.GetGroups();
+        GroupsResult? groupsResult = await elJurApi.GetGroups();
         if (groupsResult != null)
         {
             cacheService.UpdateGroups(groupsResult.Groups);

@@ -2,26 +2,26 @@
 
 namespace EJournalTelegramBot.Model.ElJurApi;
 
-public class ScheduleItem
+public record ScheduleItem
 {
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string Name { get; init; }
     
     [JsonPropertyName("num")]
-    public string Num { get; set; }
+    public string Num { get; init; }
     
     [JsonPropertyName("room")]
-    public string Room { get; set; }
+    public string Room { get; init; }
     
     [JsonPropertyName("teacher")]
-    public string Teacher { get; set; }
+    public string Teacher { get; init; }
     
     [JsonPropertyName("starttime")]
-    public string StartTime { get; set; }
+    public string StartTime { get; init; }
     
     [JsonPropertyName("endtime")]
-    public string EndTime { get; set; }
+    public string EndTime { get; init; }
     
     [JsonPropertyName("grp")]
-    public string? SubGroup { get; set; }
+    public string? SubGroup { get; init; }
 }

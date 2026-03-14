@@ -2,9 +2,9 @@
 
 namespace EJournalTelegramBot.Model;
 
-public class Schedule
+public record Schedule
 {
-    public required DateTime Day { get; set; }
-    
-    public List<ScheduleItem> ScheduleItems { get; set; }
+    public required DateTime Day { get; init; }
+
+    public List<ScheduleItem> ScheduleItems { get; init; } = new List<ScheduleItem>();
 }

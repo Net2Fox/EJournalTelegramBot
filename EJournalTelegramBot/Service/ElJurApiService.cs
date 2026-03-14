@@ -21,7 +21,7 @@ public class ElJurApiService
         _httpClient = httpClient ?? new HttpClient();
     }
     
-    public async Task<GetScheduleResult?> GetSchedule(string groupName, string date, string rings)
+    public async Task<ScheduleResult?> GetSchedule(string groupName, string date, string rings)
     {
         var url = $"{BaseUrl}/getschedule?class={groupName}&days={date}&rings={rings}&devkey={DevKey}&out_format=json&vendor={Vendor}&auth_token={AuthToken}";
         
@@ -42,13 +42,13 @@ public class ElJurApiService
             result.TryGetProperty("days", out JsonElement days) &&
             days.TryGetProperty(date, out JsonElement data))
         {
-            GetScheduleResult? getScheduleResult = data.Deserialize<GetScheduleResult>();
+            ScheduleResult? getScheduleResult = data.Deserialize<ScheduleResult>();
             return getScheduleResult;
         }
         return null;
     }
     
-    public async Task<GetGroupsResult?> GetGroups()
+    public async Task<GroupsResult?> GetGroups()
     {
         var url = $"{BaseUrl}/getmessagereceivers?devkey={DevKey}&out_format=json&vendor={Vendor}&auth_token={AuthToken}";
         
@@ -68,7 +68,7 @@ public class ElJurApiService
             jsonResponse.TryGetProperty("result", out JsonElement result) &&
             result.TryGetProperty("groups", out JsonElement groups))
         {
-            GetGroupsResult groupsResult = new GetGroupsResult();
+            GroupsResult groupsResult = new GroupsResult();
             foreach (var group in groups.EnumerateArray())
             {
                 if (group.TryGetProperty("key", out JsonElement keyElement) &&

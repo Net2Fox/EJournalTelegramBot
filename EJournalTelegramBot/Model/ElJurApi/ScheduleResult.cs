@@ -2,14 +2,14 @@
 
 namespace EJournalTelegramBot.Model.ElJurApi;
 
-public class GetScheduleResult
+public record ScheduleResult
 {
     [JsonPropertyName("name")]
-    public required string Day { get; set; }
+    public required string Day { get; init; }
     
     [JsonPropertyName("title")]
-    public required string DayOfWeek { get; set; }
+    public required string DayOfWeek { get; init; }
     
     [JsonPropertyName("items")]
-    public List<ScheduleItem> ScheduleItems { get; set; }
+    public required List<ScheduleItem> ScheduleItems { get; init; }
 }
