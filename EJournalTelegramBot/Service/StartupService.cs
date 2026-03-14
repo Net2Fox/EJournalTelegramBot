@@ -9,7 +9,6 @@ public class StartupService(UpdateCacheService updateCacheService, ITelegramBotC
     {
         await SetBotCommands(cancellationToken);
         await updateCacheService.UpdateGroupsCache();
-        await updateCacheService.UpdateTeacherCache();
         await updateCacheService.UpdateScheduleCache();
     }
 
