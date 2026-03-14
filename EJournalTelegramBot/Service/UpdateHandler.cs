@@ -94,58 +94,65 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
         InlineKeyboardMarkup inline = new InlineKeyboardMarkup();
         string text = "";
         
-        switch (callbackQuery.Data)
+        var (prefix, action, value) = CallbackData.Parse(callbackQuery.Data!);
+
+        switch (action)
         {
-            case "Back":
-                inline = MainMenu();
+            case CallbackData.MainMenuAction:
+                inline = InlineKeyboard.BuildMainMenu();
                 text = "Главное меню";
                 break;
-            case "1" or "2" or "3" or "4":
-                inline = BuildGridInlineKeyboard(cacheService.GetGroups().Where(g => g[0] == Char.Parse(callbackQuery.Data)).ToList(), CallbackData.GroupSuffix);
-                text = "Выберите группу";
-                break;
-            case $"Back{CallbackData.TeacherSuffix}":
-                inline = BuildGridInlineKeyboard(cacheService.GetTeachers(-12), CallbackData.TeacherSuffix);
-                text = "Выберите преподавателя";
-                break;
-            case $"Next{CallbackData.TeacherSuffix}":
-                inline = BuildGridInlineKeyboard(cacheService.GetTeachers(12), CallbackData.TeacherSuffix);
-                text = "Выберите преподавателя";
-                break;
-            case $"Back{CallbackData.RoomSuffix}":
-                inline = BuildGridInlineKeyboard(cacheService.GetRooms(-12), CallbackData.RoomSuffix);
-                text = "Выберите аудиторию";
-                break;
-            case $"Next{CallbackData.RoomSuffix}":
-                inline = BuildGridInlineKeyboard(cacheService.GetRooms(12), CallbackData.RoomSuffix);
-                text = "Выберите аудиторию";
-                break;
-            case "Teacher":
-                inline = BuildGridInlineKeyboard(cacheService.GetTeachers(), CallbackData.TeacherSuffix);
-                text = "Выберите преподавателя";
-                break;
-            case "Group":
-                inline = ChooseCourse();
+            case CallbackData.ChooseCourseAction:
+                inline = InlineKeyboard.BuildChooseCourse();
                 text = "Выберите курс";
                 break;
-            case "Room":
-                inline = BuildGridInlineKeyboard(cacheService.GetRooms(), CallbackData.RoomSuffix);
-                text = "Выберите аудиторию";
+            
+            case CallbackData.SelectAction:
+                switch (prefix)
+                {
+                    case CallbackData.ChooseCoursePrefix:
+                        inline = InlineKeyboard.BuildGrid(cacheService.GetGroups().Where(g => g[0] == Char.Parse(value)).ToList(),CallbackData.GroupPrefix);
+                        text = "Выберите группу";
+                        break;
+                    case CallbackData.TeacherPrefix:
+                        text = cacheService.GetTeacherFormattedSchedule(value);
+                        break;
+                    case CallbackData.RoomPrefix:
+                        text = cacheService.GetRoomFormattedSchedule(value);
+                        break;
+                    case CallbackData.GroupPrefix:
+                        text = cacheService.GetFormattedSchedule(value);
+                        break;
+                }
                 break;
-            case string t when t.Contains("TCH"):
-                text = cacheService.GetTeacherFormattedSchedule(callbackQuery.Data.Split(" ")[0]);
-                break;
-            case string t when t.Contains("RM"):
-                text = cacheService.GetRoomFormattedSchedule(callbackQuery.Data.Split(" ")[0]);
-                break;
-            case string t when t.Contains("GRP"):
-                text = cacheService.GetFormattedSchedule(callbackQuery.Data.Split(" ")[0]);
+            
+            case CallbackData.PageAction:
+                int offset = int.Parse(value);
+                switch (prefix)
+                {
+                    case CallbackData.GroupPrefix:
+                        inline = InlineKeyboard.BuildPagedGrid(cacheService.GetGroups().Where(g => g[0] == Char.Parse(value)).ToList(), 0,CallbackData.GroupPrefix);
+                        text = "Выберите группу";
+                        break;
+                    case CallbackData.TeacherPrefix:
+                        inline = InlineKeyboard.BuildPagedGrid(cacheService.GetTeachers(), offset, CallbackData.TeacherPrefix);
+                        text = "Выберите преподавателя";
+                        break;
+                    case CallbackData.RoomPrefix:
+                        inline = InlineKeyboard.BuildPagedGrid(cacheService.GetRooms(), offset, CallbackData.RoomPrefix);
+                        text = "Выберите аудиторию";
+                        break;
+                }
                 break;
         }
-        inline.AddNewRow();
-        inline.AddButton("Меню", "Back");
-        await bot.EditMessageText(callbackQuery.Message.Chat, callbackQuery.Message.MessageId, text,  ParseMode.Markdown);
-        await bot.EditMessageReplyMarkup(callbackQuery.Message.Chat, callbackQuery.Message.MessageId, inline);
+
+        if (action != CallbackData.MainMenuAction)
+        {
+            inline.AddNewRow();
+            inline.AddButton("Меню", CallbackData.Action(CallbackData.MainMenuAction));
+        }
+        
+        await bot.EditMessageText(callbackQuery.Message!.Chat, callbackQuery.Message.MessageId, text,  ParseMode.Markdown, inline);
     }
     
     async Task<Message> UpdateSchedule(Message message)
