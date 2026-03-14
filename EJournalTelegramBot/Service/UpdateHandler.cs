@@ -39,54 +39,7 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
         logger.LogInformation("Received message type: {MessageType}", message.Type);
         
         await bot.SendMessage(message.Chat.Id, "Главное меню",
-            replyMarkup: MainMenu());
-    }
-
-    private InlineKeyboardMarkup MainMenu()
-    {
-        InlineKeyboardMarkup inline = new InlineKeyboardMarkup();
-        inline.AddButton("Расписание по группам", "Group");
-        inline.AddNewRow();
-        inline.AddButton("Расписание по преподавателям", "Teacher");
-        inline.AddNewRow();
-        inline.AddButton("Расписание по кабинетам", "Room");
-        return inline;
-    }
-
-    private InlineKeyboardMarkup ChooseCourse()
-    {
-        return new InlineKeyboardMarkup()
-            .AddButton("1 курс", "1")
-            .AddButton("2 курс", "2")
-            .AddNewRow()
-            .AddButton("3 курс", "3")
-            .AddButton("4 курс", "4");
-    }
-
-    private InlineKeyboardMarkup BuildGridInlineKeyboard(IReadOnlyList<string> items, string suffix)
-    {
-        InlineKeyboardMarkup inline = new InlineKeyboardMarkup();
-        
-        int i = 0;
-        foreach (var item in items)
-        {
-            if (i != 2)
-            {
-                inline.AddButton(new InlineKeyboardButton(item, $"{item.Split(" ")[0]} {suffix}"));
-                i++;
-            }
-            else
-            {
-                inline.AddNewRow();
-                i = 0;
-                inline.AddButton(new InlineKeyboardButton(item, $"{item.Split(" ")[0]} {suffix}"));
-                i++;
-            }
-        }
-        inline.AddNewRow();
-        inline.AddButton("Назад", $"Back{suffix}");
-        inline.AddButton("Дальше", $"Next{suffix}");
-        return inline;
+            replyMarkup: InlineKeyboard.BuildMainMenu());
     }
 
     private async Task OnCallbackQuery(CallbackQuery callbackQuery)
