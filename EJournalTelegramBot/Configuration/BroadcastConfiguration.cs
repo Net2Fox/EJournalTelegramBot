@@ -2,5 +2,5 @@
 
 public class BroadcastConfiguration
 {
-    public List<long>? ChatIds { get; init; } = null!;
+    public List<SubscriptionConfiguration>? BroadcastEntities { get; init; } = null!;
 }
