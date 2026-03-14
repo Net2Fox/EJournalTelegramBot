@@ -20,6 +20,9 @@ public class UpdateCacheService(ElJurApiService elJurApi, CacheService cacheServ
             case DayOfWeek.Sunday:
                 tomorrow = tomorrow.AddDays(1);
                 break;
+            default:
+                tomorrow = tomorrow.AddDays(1);
+                break;
         }
 
         bool isSuccessful = true;
