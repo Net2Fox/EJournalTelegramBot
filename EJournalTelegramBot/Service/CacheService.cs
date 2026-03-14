@@ -22,7 +22,17 @@ public class CacheService(ScheduleFormatter formatter)
     
     public string GetFormattedSchedule(string groupName)
     {
-        return formatter.Format(groupName, _scheduleCache.GetValueOrDefault(groupName));
+        return formatter.FormatGroup(groupName, _scheduleCache.GetValueOrDefault(groupName));
+    }
+    
+    public string GetTeacherFormattedSchedule(string teacher)
+    {
+        return formatter.FormatTeacher(teacher, _teacherScheduleCache.GetValueOrDefault(teacher));
+    }
+    
+    public string GetRoomFormattedSchedule(string room)
+    {
+        return formatter.FormatRoom(room, _roomScheduleCache.GetValueOrDefault(room));
     }
 
     public void UpdateSchedule(string groupName, Schedule schedule)
