@@ -1,5 +1,6 @@
 using EJournalTelegramBot;
 using EJournalTelegramBot.Configuration;
+using EJournalTelegramBot.Context;
 using EJournalTelegramBot.Job;
 using EJournalTelegramBot.Service;
 using Microsoft.Extensions.Options;
@@ -63,6 +64,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         
         services.AddScoped<UpdateHandler>();
         services.AddScoped<ReceiverService>();
+        services.AddDbContext<BotContext>();
         services.AddHostedService<PollingService>();
         services.AddHostedService<StartupService>();
     })
