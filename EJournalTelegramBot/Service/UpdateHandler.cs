@@ -103,6 +103,15 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
                         break;
                 }
                 break;
+            
+            case CallbackData.SubscribeAction:
+                await SubscribeUser(callbackQuery.Message!.Chat.Id, value);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "Вы успешно подписались!");
+                return;
+            case CallbackData.UnsubscribeAction:
+                await UnsubscribeUser(callbackQuery.Message!.Chat.Id, value);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "Вы успешно отписались!");
+                return;
         }
 
         if (action != CallbackData.MainMenuAction)
