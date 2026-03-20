@@ -1,6 +1,9 @@
 ﻿using System.Text;
 using EJournalTelegramBot.Configuration;
+using EJournalTelegramBot.Context;
+using EJournalTelegramBot.Model.SQLite;
 using EJournalTelegramBot.Util;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -11,7 +14,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace EJournalTelegramBot.Service;
 
-public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCacheService updateCacheService, CacheService cacheService, ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IUpdateHandler
+public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCacheService updateCacheService, CacheService cacheService, BotContext db, ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IUpdateHandler
 {
     public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source,
         CancellationToken cancellationToken)
@@ -106,6 +109,27 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
         }
         
         await bot.EditMessageText(callbackQuery.Message!.Chat, callbackQuery.Message.MessageId, text,  ParseMode.Markdown, inline);
+    }
+
+    private async Task<bool> IsSubscribed(long chatId, string group)
+    {
+        return  await db.Subscriptions.AnyAsync(s => s.ChatId == chatId && s.Group == group);
+    }
+
+    private async Task SubscribeUser(long chatId, string group)
+    {
+        await db.Subscriptions.AddAsync(new Subscription
+        {
+            ChatId = chatId,
+            Group = group
+        });
+        await db.SaveChangesAsync();
+    }
+    
+    private async Task UnsubscribeUser(long chatId, string group)
+    {
+        await db.Subscriptions.Where(s => s.ChatId == chatId && s.Group == group).ExecuteDeleteAsync();
+
     }
     
     async Task<Message> UpdateSchedule(Message message)
