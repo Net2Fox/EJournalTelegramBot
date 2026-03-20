@@ -1,13 +1,13 @@
-﻿using EJournalTelegramBot.Configuration;
+﻿using EJournalTelegramBot.Context;
 using EJournalTelegramBot.Service;
-using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
 namespace EJournalTelegramBot.Job;
 
-public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService updateCacheService, IOptionsMonitor<BroadcastConfiguration> broadcast, ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IJob
+public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService updateCacheService, BotContext db, ITelegramBotClient bot, ILogger<UpdateHandler> logger) : IJob
 {
     public static readonly JobKey Key = new("ScheduleMessageJob");
     
@@ -25,21 +25,11 @@ public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService up
 
     private async Task BroadcastSchedule()
     {
-        var broadcastEntities = broadcast.CurrentValue.BroadcastEntities;
-        if (broadcastEntities == null)
+        var subscriptions = await db.Subscriptions.ToListAsync();
+
+        foreach (var subscription in subscriptions)
         {
-            return;
-        }
-        
-        foreach (var broadcastEntity in broadcastEntities)
-        {
-            if (broadcastEntity.Subscriptions != null)
-            {
-                foreach (string subscription in broadcastEntity.Subscriptions)
-                {
-                    await bot.SendMessage(broadcastEntity.ChatId, cacheService.GetFormattedSchedule(subscription), ParseMode.Markdown);
-                }
-            }
+            await bot.SendMessage(subscription.ChatId, cacheService.GetFormattedSchedule(subscription.Group), ParseMode.Markdown);
         }
     }
 }
