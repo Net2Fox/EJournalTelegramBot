@@ -8,12 +8,19 @@ public static class CallbackData
     public const string ChooseCourseAction = "CCA";
     public const string SelectAction = "SEL";
     public const string PageAction = "PAGE";
+    public const string SubscribeAction = "SUB";
+    public const string UnsubscribeAction = "UNSUB";
 
     public const string ChooseCoursePrefix = "CCP";
     public const string TeacherPrefix = "TCH";
     public const string RoomPrefix = "RM";
     public const string GroupPrefix = "GRP";
 
+    public static string Subscribe(string value) => $"_{Sep}{SubscribeAction}{Sep}{value}";
+    
+    public static string Unsubscribe(string value) => $"_{Sep}{UnsubscribeAction}{Sep}{value}";
+
+    
     public static string Select(string prefix, string value) => $"{prefix}{Sep}{SelectAction}{Sep}{value}";
     
     public static string Page(string prefix, int offset) => $"{prefix}{Sep}{PageAction}{Sep}{offset}";
