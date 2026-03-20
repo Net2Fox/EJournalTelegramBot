@@ -71,12 +71,15 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
                         text = "Выберите группу";
                         break;
                     case CallbackData.TeacherPrefix:
+                        inline.AddButton(await IsSubscribed(callbackQuery.Message!.Chat.Id, value) ? InlineKeyboard.BuildUnsubscribeButton(value) : InlineKeyboard.BuildSubscribeButton(value));
                         text = cacheService.GetTeacherFormattedSchedule(value);
                         break;
                     case CallbackData.RoomPrefix:
+                        inline.AddButton(await IsSubscribed(callbackQuery.Message!.Chat.Id, value) ? InlineKeyboard.BuildUnsubscribeButton(value) : InlineKeyboard.BuildSubscribeButton(value));
                         text = cacheService.GetRoomFormattedSchedule(value);
                         break;
                     case CallbackData.GroupPrefix:
+                        inline.AddButton(await IsSubscribed(callbackQuery.Message!.Chat.Id, value) ? InlineKeyboard.BuildUnsubscribeButton(value) : InlineKeyboard.BuildSubscribeButton(value));
                         text = cacheService.GetFormattedSchedule(value);
                         break;
                 }
