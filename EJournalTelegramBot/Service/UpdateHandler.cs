@@ -93,7 +93,7 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
                 break;
             
             case CallbackData.SubscribeAction:
-                await SubscribeUser(callbackQuery.Message!.Chat.Id, value);
+                await SubscribeUser(callbackQuery.Message!.Chat.Id, prefix, value);
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "Вы успешно подписались!");
                 break;
             case CallbackData.UnsubscribeAction:
@@ -121,24 +121,25 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
         await bot.EditMessageText(callbackQuery.Message!.Chat, callbackQuery.Message.MessageId, text,  ParseMode.Markdown, inline);
     }
     
-    private async Task<bool> IsSubscribed(long chatId, string group)
+    private async Task<bool> IsSubscribed(long chatId, string value)
     {
-        return  await db.Subscriptions.AnyAsync(s => s.ChatId == chatId && s.Group == group);
+        return  await db.Subscriptions.AnyAsync(s => s.ChatId == chatId && s.Value == value);
     }
 
-    private async Task SubscribeUser(long chatId, string group)
+    private async Task SubscribeUser(long chatId, string prefix, string value)
     {
         await db.Subscriptions.AddAsync(new Subscription
         {
             ChatId = chatId,
-            Group = group
+            Prefix = prefix,
+            Value = value
         });
         await db.SaveChangesAsync();
     }
     
-    private async Task UnsubscribeUser(long chatId, string group)
+    private async Task UnsubscribeUser(long chatId, string value)
     {
-        await db.Subscriptions.Where(s => s.ChatId == chatId && s.Group == group).ExecuteDeleteAsync();
+        await db.Subscriptions.Where(s => s.ChatId == chatId && s.Value == value).ExecuteDeleteAsync();
     }
     
     async Task<Message> UpdateSchedule(Message message)
