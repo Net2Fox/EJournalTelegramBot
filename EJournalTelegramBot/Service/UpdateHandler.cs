@@ -70,18 +70,6 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
                         inline = InlineKeyboard.BuildGrid(cacheService.GetGroups().Where(g => g[0] == Char.Parse(value)).ToList(),CallbackData.GroupPrefix);
                         text = "Выберите группу";
                         break;
-                    case CallbackData.TeacherPrefix:
-                        inline.AddButton(await IsSubscribed(callbackQuery.Message!.Chat.Id, value) ? InlineKeyboard.BuildUnsubscribeButton(value) : InlineKeyboard.BuildSubscribeButton(value));
-                        text = cacheService.GetTeacherFormattedSchedule(value);
-                        break;
-                    case CallbackData.RoomPrefix:
-                        inline.AddButton(await IsSubscribed(callbackQuery.Message!.Chat.Id, value) ? InlineKeyboard.BuildUnsubscribeButton(value) : InlineKeyboard.BuildSubscribeButton(value));
-                        text = cacheService.GetRoomFormattedSchedule(value);
-                        break;
-                    case CallbackData.GroupPrefix:
-                        inline.AddButton(await IsSubscribed(callbackQuery.Message!.Chat.Id, value) ? InlineKeyboard.BuildUnsubscribeButton(value) : InlineKeyboard.BuildSubscribeButton(value));
-                        text = cacheService.GetFormattedSchedule(value);
-                        break;
                 }
                 break;
             
@@ -107,11 +95,21 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
             case CallbackData.SubscribeAction:
                 await SubscribeUser(callbackQuery.Message!.Chat.Id, value);
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "Вы успешно подписались!");
-                return;
+                break;
             case CallbackData.UnsubscribeAction:
                 await UnsubscribeUser(callbackQuery.Message!.Chat.Id, value);
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "Вы успешно отписались!");
-                return;
+                break;
+        }
+
+        if ((action == CallbackData.SelectAction && (prefix == CallbackData.GroupPrefix ||
+                                                     prefix == CallbackData.TeacherPrefix ||
+                                                     prefix == CallbackData.RoomPrefix))
+            || action == CallbackData.SubscribeAction
+            || action == CallbackData.UnsubscribeAction)
+        {
+            inline.AddButton(await IsSubscribed(callbackQuery.Message!.Chat.Id, value) ? InlineKeyboard.BuildUnsubscribeButton(prefix, value) : InlineKeyboard.BuildSubscribeButton(prefix, value));
+            text = cacheService.GetFormattedSchedule(prefix, value);
         }
 
         if (action != CallbackData.MainMenuAction)
@@ -122,7 +120,7 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
         
         await bot.EditMessageText(callbackQuery.Message!.Chat, callbackQuery.Message.MessageId, text,  ParseMode.Markdown, inline);
     }
-
+    
     private async Task<bool> IsSubscribed(long chatId, string group)
     {
         return  await db.Subscriptions.AnyAsync(s => s.ChatId == chatId && s.Group == group);
@@ -141,7 +139,6 @@ public class UpdateHandler(IOptions<AdminConfiguration> adminConfig, UpdateCache
     private async Task UnsubscribeUser(long chatId, string group)
     {
         await db.Subscriptions.Where(s => s.ChatId == chatId && s.Group == group).ExecuteDeleteAsync();
-
     }
     
     async Task<Message> UpdateSchedule(Message message)
