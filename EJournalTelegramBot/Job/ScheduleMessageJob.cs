@@ -29,7 +29,7 @@ public class ScheduleMessageJob(CacheService cacheService, UpdateCacheService up
 
         foreach (var subscription in subscriptions)
         {
-            await bot.SendMessage(subscription.ChatId, cacheService.GetFormattedSchedule(subscription.Group), ParseMode.Markdown);
+            await bot.SendMessage(subscription.ChatId, cacheService.GetFormattedSchedule(subscription.Prefix, subscription.Value), ParseMode.Markdown);
         }
     }
 }
