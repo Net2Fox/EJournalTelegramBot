@@ -80,14 +80,14 @@ public static class InlineKeyboard
             .AddButton("3 курс", CallbackData.Select(CallbackData.ChooseCoursePrefix, "3"))
             .AddButton("4 курс", CallbackData.Select(CallbackData.ChooseCoursePrefix, "4"));
     }
-
-    public static InlineKeyboardButton BuildSubscribeButton(string data)
+    
+    public static InlineKeyboardButton BuildSubscribeButton(string prefix, string data)
     {
-        return new InlineKeyboardButton("Подписаться", CallbackData.Subscribe(data));
+        return new InlineKeyboardButton("Подписаться", CallbackData.Subscribe(prefix, data));
     }
     
-    public static InlineKeyboardButton BuildUnsubscribeButton(string data)
+    public static InlineKeyboardButton BuildUnsubscribeButton(string prefix, string data)
     {
-        return new InlineKeyboardButton("Отписаться", CallbackData.Unsubscribe(data));
+        return new InlineKeyboardButton("Отписаться", CallbackData.Unsubscribe(prefix, data));
     }
 }
