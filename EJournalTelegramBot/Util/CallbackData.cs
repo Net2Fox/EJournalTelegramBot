@@ -16,10 +16,9 @@ public static class CallbackData
     public const string RoomPrefix = "RM";
     public const string GroupPrefix = "GRP";
 
-    public static string Subscribe(string value) => $"_{Sep}{SubscribeAction}{Sep}{value}";
+    public static string Subscribe(string prefix, string value) => $"{prefix}{Sep}{SubscribeAction}{Sep}{value}";
     
-    public static string Unsubscribe(string value) => $"_{Sep}{UnsubscribeAction}{Sep}{value}";
-
+    public static string Unsubscribe(string prefix, string value) => $"{prefix}{Sep}{UnsubscribeAction}{Sep}{value}";
     
     public static string Select(string prefix, string value) => $"{prefix}{Sep}{SelectAction}{Sep}{value}";
     
