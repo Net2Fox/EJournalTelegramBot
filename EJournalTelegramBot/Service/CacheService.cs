@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using EJournalTelegramBot.Model;
 using EJournalTelegramBot.Model.ElJurApi;
+using EJournalTelegramBot.Util;
 
 namespace EJournalTelegramBot.Service;
 
@@ -12,25 +13,13 @@ public class CacheService(ScheduleFormatter formatter)
     
     private readonly List<string> _groupCache = new();
     
-    public Schedule? GetSchedule(string groupName)
+    public string GetFormattedSchedule(string prefix, string value) => prefix switch
     {
-        return _scheduleCache.GetValueOrDefault(groupName);
-    }
-    
-    public string GetFormattedSchedule(string groupName)
-    {
-        return formatter.FormatGroup(groupName, _scheduleCache.GetValueOrDefault(groupName));
-    }
-    
-    public string GetTeacherFormattedSchedule(string teacher)
-    {
-        return formatter.FormatTeacher(teacher, _teacherScheduleCache.GetValueOrDefault(teacher));
-    }
-    
-    public string GetRoomFormattedSchedule(string room)
-    {
-        return formatter.FormatRoom(room, _roomScheduleCache.GetValueOrDefault(room));
-    }
+        CallbackData.GroupPrefix   => formatter.FormatGroup(value, _scheduleCache.GetValueOrDefault(value)),
+        CallbackData.TeacherPrefix => formatter.FormatTeacher(value, _teacherScheduleCache.GetValueOrDefault(value)),
+        CallbackData.RoomPrefix    => formatter.FormatRoom(value, _roomScheduleCache.GetValueOrDefault(value)),
+        _ => ""
+    };
 
     public void UpdateSchedule(string groupName, Schedule schedule)
     {
